@@ -220,7 +220,7 @@ void setup() {
     status.setTextSize(1);
 
     M5.Speaker.begin();
-    M5.Speaker.setVolume(120);
+    M5.Speaker.setVolume(255);
 
     bool base = boardInit();
     servoInit();

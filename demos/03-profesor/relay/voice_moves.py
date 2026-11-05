@@ -89,16 +89,29 @@ class MovesVoice(voice.Voice):
         self.dance_stop = threading.Event()
         self.dance_thread = None
         self.pose_sent = False         # nothing to hold until the first move
+        self.volume = 255              # speaker volume 0-255; starts at the maximum
         super().__init__(*args, **kwargs)
         # A pose sent once can be lost (UDP) or dropped by the robot; re-send the target
         # every 0.25 s, like the phone app does, so the head always gets there.
         threading.Thread(target=self._hold_pose, daemon=True, name="hold-pose").start()
 
     def _hold_pose(self):
+        n = 0
         while True:
             time.sleep(0.25)
+            n += 1
             if self.pose_sent and self.robot.online:
                 self.robot.pose(math.radians(self.pan), math.radians(self.tilt))
+            # The volume too, every 5 s: a robot that reboots goes back to its default.
+            if self.robot.online and n % 20 == 1:
+                self.robot.cmd(f"volume {self.volume}")
+
+    def fn_volume(self, args):
+        level = max(0, min(100, int(args.get("level", 100))))
+        self.volume = level * 255 // 100     # 100 % = 255, the maximum
+        self.robot.cmd(f"volume {self.volume}")
+        log(f"Volume: {level}% ({self.volume}/255)")
+        return {"ok": True, "level": level}
 
     def functions(self):
         S = types.Schema

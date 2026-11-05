@@ -13,7 +13,7 @@ static constexpr size_t OUT_RING = OUT_RATE * 20;   // 20 s of speech in PSRAM
 static constexpr uint32_t OUT_IDLE_MS = 400;   // no AUDIO_OUT for this long = the answer is over
 static constexpr uint32_t REOPEN_MIC_MS = 250; // after speaking, wait so the mic doesn't catch the echo
 
-static volatile int s_volume = 120;           // 0-255. Loud + LEDs + Wi-Fi can brown out the robot
+static volatile int s_volume = 255;           // 0-255. Loud + LEDs + Wi-Fi can brown out the robot
 static volatile bool s_volumeChanged = false;
 static volatile bool s_handsFree = true;
 static volatile bool s_muted = false;          // hands-free: the user silenced the mic
