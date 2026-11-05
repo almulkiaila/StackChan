@@ -10,6 +10,11 @@ voice_moves.py. No VR viewer and no video: the head only moves by voice.
 import os
 import sys
 
+# The Windows console (cp1252) can't print some characters of the transcripts and the
+# error closed the Gemini session after every answer.
+for _s in (sys.stdout, sys.stderr):
+    _s.reconfigure(encoding="utf-8", errors="replace")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "..", "lib", "python"))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "02-gemini-voice", "relay"))

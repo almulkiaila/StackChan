@@ -145,7 +145,10 @@ class MovesVoice(voice.Voice):
         mood = args.get("mood", "neutral")
         if mood not in MOODS:
             return {"error": f"there is no mood called {mood}"}
-        self._stop_dancing()
+        if self.dance_thread is not None and self.dance_thread.is_alive():
+            self.mood = mood    # don't stop the dance: show this mood when it ends
+            log(f"Mood after the dance: {mood}")
+            return {"ok": True, "mood": mood, "note": "still dancing; this mood shows when the dance ends"}
         self._show_mood(mood)
         return {"ok": True, "mood": mood}
 
