@@ -34,10 +34,10 @@ MOODS = {
 BEAT_S = 0.5
 # Dance steps, one per bar (4 beats): (pan, tilt) in degrees on each beat.
 DANCE = [
-    [(20, 10), (-20, 10), (20, 10), (-20, 10)],     # left-right
-    [(0, 25), (0, 2), (0, 25), (0, 2)],             # head bob
-    [(35, 20), (10, 5), (-10, 20), (-35, 5)],       # sweep
-    [(15, 15), (-15, 15), (15, 3), (-15, 3)],       # square
+    [(40, 15), (-40, 15), (40, 15), (-40, 15)],     # left-right
+    [(0, 40), (0, 0), (0, 40), (0, 0)],             # head bob
+    [(50, 30), (15, 5), (-15, 30), (-50, 5)],       # sweep
+    [(30, 30), (-30, 30), (30, 2), (-30, 2)],       # square
 ]
 DANCE_COLORS = [(LED, 0, 0), (0, LED, 0), (0, 0, LED), (LED, 0, LED), (LED, LED // 2, 0), (0, LED, LED)]
 
@@ -69,7 +69,17 @@ class MovesVoice(voice.Voice):
         self.mood = "neutral"
         self.dance_stop = threading.Event()
         self.dance_thread = None
+        self.pose_sent = False         # nothing to hold until the first move
         super().__init__(*args, **kwargs)
+        # A pose sent once can be lost (UDP) or dropped by the robot; re-send the target
+        # every 0.25 s, like the phone app does, so the head always gets there.
+        threading.Thread(target=self._hold_pose, daemon=True, name="hold-pose").start()
+
+    def _hold_pose(self):
+        while True:
+            time.sleep(0.25)
+            if self.pose_sent and self.robot.online:
+                self.robot.pose(math.radians(self.pan), math.radians(self.tilt))
 
     def functions(self):
         S = types.Schema
@@ -127,6 +137,7 @@ class MovesVoice(voice.Voice):
     def _send(self, pan, tilt):
         self.pan = _wrap180(pan)
         self.tilt = max(TILT_MIN, min(TILT_MAX, tilt))
+        self.pose_sent = True
         self.robot.pose(math.radians(self.pan), math.radians(self.tilt))
 
     def fn_look(self, args):
