@@ -89,7 +89,7 @@ class MovesVoice(voice.Voice):
         self.dance_stop = threading.Event()
         self.dance_thread = None
         self.pose_sent = False         # nothing to hold until the first move
-        self.volume = 255              # speaker volume 0-255; starts at the maximum
+        self.volume = 220              # speaker volume 0-255 (255 = maximum)
         super().__init__(*args, **kwargs)
         # A pose sent once can be lost (UDP) or dropped by the robot; re-send the target
         # every 0.25 s, like the phone app does, so the head always gets there.
