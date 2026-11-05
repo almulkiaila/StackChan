@@ -1,0 +1,6 @@
+platformio>=6.1,<7
+pyserial>=3.5
+numpy>=1.26
+opencv-python>=4.9,<5
+google-genai>=1.30
+pygame>=2.5,<3
