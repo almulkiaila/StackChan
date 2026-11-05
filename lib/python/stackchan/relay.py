@@ -137,9 +137,17 @@ class Robot:
             self.limits = {"pan": lim["pan"], "tilt": lim["tilt"]}
         self.send_ack()
 
+    def _sendto(self, data, addr):
+        # If the laptop's Wi-Fi drops for a moment, sendto raises "network unreachable".
+        # Don't let that kill the thread that talks to the robot: drop the packet and go on.
+        try:
+            self.sock.sendto(data, addr)
+        except OSError as e:
+            debug(f"send to robot failed: {e}")
+
     def send_ack(self):
         if self.addr is not None:
-            self.sock.sendto(P.header(P.R_ACK) + bytes((1 if self.want_video else 0,)), self.addr)
+            self._sendto(P.header(P.R_ACK) + bytes((1 if self.want_video else 0,)), self.addr)
 
     def is_mine(self, addr):
         return self.addr == addr
@@ -152,7 +160,7 @@ class Robot:
         with self.lock:
             self.pose_seq += 1
             self.last_pose = (pan, tilt)
-            self.sock.sendto(P.pose_packet(self.pose_seq, pan, tilt), self.addr)
+            self._sendto(P.pose_packet(self.pose_seq, pan, tilt), self.addr)
 
     def pause_phone_control(self, seconds):
         """Ignore the phone's head control for a while, so a pose set by code (or
@@ -165,12 +173,12 @@ class Robot:
 
     def cmd(self, text):
         if self.online:
-            self.sock.sendto(P.header(P.R_CMD) + text.encode()[:200], self.addr)
+            self._sendto(P.header(P.R_CMD) + text.encode()[:200], self.addr)
 
     def send(self, msg_type, payload=b""):
         """Any other message to the robot (demos define their own types)."""
         if self.online:
-            self.sock.sendto(P.header(msg_type) + payload, self.addr)
+            self._sendto(P.header(msg_type) + payload, self.addr)
 
 
 class Phones:
